@@ -82,12 +82,14 @@ func TestValidateDriveExportSpec(t *testing.T) {
 func TestDriveExportMarkdownWritesFile(t *testing.T) {
 	f, stdout, _, reg := cmdutil.TestFactory(t, driveTestConfig())
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
-		URL:    "/open-apis/docs/v1/content",
+		Method: "POST",
+		URL:    "/open-apis/docs_ai/v1/documents/docx123/fetch",
 		Body: map[string]interface{}{
 			"code": 0,
 			"data": map[string]interface{}{
-				"content": "# hello\n",
+				"document": map[string]interface{}{
+					"content": "# hello\n",
+				},
 			},
 		},
 	})
@@ -133,12 +135,14 @@ func TestDriveExportMarkdownWritesFile(t *testing.T) {
 func TestDriveExportMarkdownUsesProvidedFileName(t *testing.T) {
 	f, stdout, _, reg := cmdutil.TestFactory(t, driveTestConfig())
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
-		URL:    "/open-apis/docs/v1/content",
+		Method: "POST",
+		URL:    "/open-apis/docs_ai/v1/documents/docx123/fetch",
 		Body: map[string]interface{}{
 			"code": 0,
 			"data": map[string]interface{}{
-				"content": "# custom\n",
+				"document": map[string]interface{}{
+					"content": "# custom\n",
+				},
 			},
 		},
 	})
@@ -179,7 +183,7 @@ func TestDriveExportDryRunIncludesLocalFileNameMetadata(t *testing.T) {
 	}{
 		{
 			name:         "markdown",
-			wantURL:      "/open-apis/docs/v1/content",
+			wantURL:      "/open-apis/docs_ai/v1/documents/docx123/fetch",
 			wantFileName: `"file_name": "notes.md"`,
 			args: []string{
 				"+export",
@@ -234,12 +238,14 @@ func TestDriveExportDryRunIncludesLocalFileNameMetadata(t *testing.T) {
 func TestDriveExportMarkdownFallsBackToTokenWhenTitleLookupFails(t *testing.T) {
 	f, stdout, _, reg := cmdutil.TestFactory(t, driveTestConfig())
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
-		URL:    "/open-apis/docs/v1/content",
+		Method: "POST",
+		URL:    "/open-apis/docs_ai/v1/documents/docx123/fetch",
 		Body: map[string]interface{}{
 			"code": 0,
 			"data": map[string]interface{}{
-				"content": "# fallback\n",
+				"document": map[string]interface{}{
+					"content": "# fallback\n",
+				},
 			},
 		},
 	})
