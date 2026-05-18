@@ -341,6 +341,8 @@ func buildMarkdownUnifiedDiff(fromLabel, toLabel string, ops []markdownDiffLineO
 			b.WriteString(op.Content)
 			if !strings.HasSuffix(op.Content, "\n") {
 				b.WriteByte('\n')
+				b.WriteString(`\ No newline at end of file`)
+				b.WriteByte('\n')
 			}
 		}
 	}

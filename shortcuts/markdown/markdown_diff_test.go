@@ -17,6 +17,7 @@ import (
 )
 
 func TestMarkdownDiffRejectsUnsupportedFormat(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	f, stdout, _, _ := cmdutil.TestFactory(t, markdownTestConfig())
 
 	err := mountAndRunMarkdown(t, MarkdownDiff, []string{
@@ -31,6 +32,7 @@ func TestMarkdownDiffRejectsUnsupportedFormat(t *testing.T) {
 }
 
 func TestMarkdownDiffRejectsToVersionWithoutFromVersion(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	f, stdout, _, _ := cmdutil.TestFactory(t, markdownTestConfig())
 
 	err := mountAndRunMarkdown(t, MarkdownDiff, []string{
@@ -44,6 +46,7 @@ func TestMarkdownDiffRejectsToVersionWithoutFromVersion(t *testing.T) {
 }
 
 func TestMarkdownDiffRemoteVsRemoteJSON(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	f, stdout, _, reg := cmdutil.TestFactory(t, markdownTestConfig())
 	reg.Register(&httpmock.Stub{
 		Method:  "GET",
@@ -115,6 +118,7 @@ func TestMarkdownDiffRemoteVsRemoteJSON(t *testing.T) {
 }
 
 func TestMarkdownDiffRemoteVsLocalPretty(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	f, stdout, _, reg := cmdutil.TestFactory(t, markdownTestConfig())
 	reg.Register(&httpmock.Stub{
 		Method:  "GET",
@@ -153,7 +157,7 @@ func TestMarkdownDiffRemoteVsLocalPretty(t *testing.T) {
 	}
 }
 
-func TestMarkdownDiffOmitsNoNewlineMarker(t *testing.T) {
+func TestMarkdownDiffIncludesNoNewlineMarker(t *testing.T) {
 	diffText, changed, added, deleted, hunks := summarizeMarkdownDiff(
 		"a/test.md",
 		"b/test.md",
@@ -170,15 +174,16 @@ func TestMarkdownDiffOmitsNoNewlineMarker(t *testing.T) {
 	if len(hunks) != 1 {
 		t.Fatalf("len(hunks) = %d, want 1", len(hunks))
 	}
-	if strings.Contains(diffText, "\\ No newline at end of file") {
-		t.Fatalf("diff should not contain no-newline marker: %q", diffText)
+	if strings.Count(diffText, "\\ No newline at end of file") != 2 {
+		t.Fatalf("diff should contain two no-newline markers: %q", diffText)
 	}
-	if !strings.Contains(diffText, "-hello old\n+hello new\n") {
-		t.Fatalf("diff missing expected newline-normalized replacement: %q", diffText)
+	if !strings.Contains(diffText, "-hello old\n\\ No newline at end of file\n+hello new\n\\ No newline at end of file\n") {
+		t.Fatalf("diff missing expected no-newline marker sequence: %q", diffText)
 	}
 }
 
 func TestMarkdownDiffRemoteVsRemoteJSONMultipleHunks(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	f, stdout, _, reg := cmdutil.TestFactory(t, markdownTestConfig())
 	reg.Register(&httpmock.Stub{
 		Method:  "GET",
@@ -239,6 +244,7 @@ func TestMarkdownDiffRemoteVsRemoteJSONMultipleHunks(t *testing.T) {
 }
 
 func TestMarkdownDiffNoChangesPretty(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	f, stdout, _, reg := cmdutil.TestFactory(t, markdownTestConfig())
 	reg.Register(&httpmock.Stub{
 		Method:  "GET",
@@ -269,6 +275,7 @@ func TestMarkdownDiffNoChangesPretty(t *testing.T) {
 }
 
 func TestMarkdownDiffDryRunRemoteVsLocal(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	f, stdout, _, _ := cmdutil.TestFactory(t, markdownTestConfig())
 
 	tmpDir := t.TempDir()

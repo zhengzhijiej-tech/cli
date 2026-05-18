@@ -170,10 +170,6 @@ func markdownSourceSize(runtime *common.RuntimeContext, spec markdownUploadSpec)
 	return size, nil
 }
 
-func openMarkdownDownload(ctx context.Context, runtime *common.RuntimeContext, fileToken string) (*http.Response, string, error) {
-	return openMarkdownDownloadVersion(ctx, runtime, fileToken, "")
-}
-
 func openMarkdownDownloadVersion(ctx context.Context, runtime *common.RuntimeContext, fileToken, version string) (*http.Response, string, error) {
 	req := &larkcore.ApiReq{
 		HttpMethod: http.MethodGet,
