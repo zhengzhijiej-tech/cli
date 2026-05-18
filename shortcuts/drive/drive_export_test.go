@@ -81,7 +81,7 @@ func TestValidateDriveExportSpec(t *testing.T) {
 
 func TestDriveExportMarkdownWritesFile(t *testing.T) {
 	f, stdout, _, reg := cmdutil.TestFactory(t, driveTestConfig())
-	reg.Register(&httpmock.Stub{
+	fetchStub := &httpmock.Stub{
 		Method: "POST",
 		URL:    "/open-apis/docs_ai/v1/documents/docx123/fetch",
 		Body: map[string]interface{}{
@@ -92,7 +92,8 @@ func TestDriveExportMarkdownWritesFile(t *testing.T) {
 				},
 			},
 		},
-	})
+	}
+	reg.Register(fetchStub)
 	reg.Register(&httpmock.Stub{
 		Method: "POST",
 		URL:    "/open-apis/drive/v1/metas/batch_query",
@@ -120,6 +121,14 @@ func TestDriveExportMarkdownWritesFile(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
+	var reqBody map[string]interface{}
+	if err := json.Unmarshal(fetchStub.CapturedBody, &reqBody); err != nil {
+		t.Fatalf("unmarshal docs_ai fetch body: %v", err)
+	}
+	if reqBody["format"] != "markdown" {
+		t.Fatalf("docs_ai fetch body format = %v, want %q", reqBody["format"], "markdown")
+	}
+
 	data, err := os.ReadFile(filepath.Join(tmpDir, "Weekly Notes.md"))
 	if err != nil {
 		t.Fatalf("ReadFile() error: %v", err)
@@ -134,7 +143,7 @@ func TestDriveExportMarkdownWritesFile(t *testing.T) {
 
 func TestDriveExportMarkdownUsesProvidedFileName(t *testing.T) {
 	f, stdout, _, reg := cmdutil.TestFactory(t, driveTestConfig())
-	reg.Register(&httpmock.Stub{
+	fetchStub := &httpmock.Stub{
 		Method: "POST",
 		URL:    "/open-apis/docs_ai/v1/documents/docx123/fetch",
 		Body: map[string]interface{}{
@@ -145,7 +154,8 @@ func TestDriveExportMarkdownUsesProvidedFileName(t *testing.T) {
 				},
 			},
 		},
-	})
+	}
+	reg.Register(fetchStub)
 
 	tmpDir := t.TempDir()
 	withDriveWorkingDir(t, tmpDir)
@@ -160,6 +170,14 @@ func TestDriveExportMarkdownUsesProvidedFileName(t *testing.T) {
 	}, f, stdout)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var reqBody map[string]interface{}
+	if err := json.Unmarshal(fetchStub.CapturedBody, &reqBody); err != nil {
+		t.Fatalf("unmarshal docs_ai fetch body: %v", err)
+	}
+	if reqBody["format"] != "markdown" {
+		t.Fatalf("docs_ai fetch body format = %v, want %q", reqBody["format"], "markdown")
 	}
 
 	data, err := os.ReadFile(filepath.Join(tmpDir, "custom-notes.md"))
@@ -237,7 +255,7 @@ func TestDriveExportDryRunIncludesLocalFileNameMetadata(t *testing.T) {
 
 func TestDriveExportMarkdownFallsBackToTokenWhenTitleLookupFails(t *testing.T) {
 	f, stdout, _, reg := cmdutil.TestFactory(t, driveTestConfig())
-	reg.Register(&httpmock.Stub{
+	fetchStub := &httpmock.Stub{
 		Method: "POST",
 		URL:    "/open-apis/docs_ai/v1/documents/docx123/fetch",
 		Body: map[string]interface{}{
@@ -248,7 +266,8 @@ func TestDriveExportMarkdownFallsBackToTokenWhenTitleLookupFails(t *testing.T) {
 				},
 			},
 		},
-	})
+	}
+	reg.Register(fetchStub)
 	reg.Register(&httpmock.Stub{
 		Method: "POST",
 		URL:    "/open-apis/drive/v1/metas/batch_query",
@@ -271,6 +290,14 @@ func TestDriveExportMarkdownFallsBackToTokenWhenTitleLookupFails(t *testing.T) {
 	}, f, stdout)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var reqBody map[string]interface{}
+	if err := json.Unmarshal(fetchStub.CapturedBody, &reqBody); err != nil {
+		t.Fatalf("unmarshal docs_ai fetch body: %v", err)
+	}
+	if reqBody["format"] != "markdown" {
+		t.Fatalf("docs_ai fetch body format = %v, want %q", reqBody["format"], "markdown")
 	}
 
 	data, err := os.ReadFile(filepath.Join(tmpDir, "docx123.md"))

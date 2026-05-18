@@ -120,9 +120,13 @@ var DriveExport = common.Shortcut{
 			}
 
 			// Extract content from the V2 response: data.document.content
-			var content string
-			if doc, ok := data["document"].(map[string]interface{}); ok {
-				content, _ = doc["content"].(string)
+			doc, ok := data["document"].(map[string]interface{})
+			if !ok {
+				return output.Errorf(output.ExitAPI, "api_error", "invalid markdown fetch response: missing document object")
+			}
+			content, ok := doc["content"].(string)
+			if !ok {
+				return output.Errorf(output.ExitAPI, "api_error", "invalid markdown fetch response: missing document.content")
 			}
 
 			fileName := preferredFileName
