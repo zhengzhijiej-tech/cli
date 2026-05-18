@@ -165,7 +165,7 @@ lark-cli docs +search --query "方案" --format json --page-token '<PAGE_TOKEN>'
 
 ### 字段使用建议
 
-- `creator_ids`：适合“找某个人创建的文档 / 表格 / Wiki”。如果用户只给姓名，不要猜 ID，先查这个人的 `open_id`。
+- `creator_ids`：按**文档所有者（owner）**过滤，适合“找某个人 owner 的文档 / 表格 / Wiki”。注意服务端字段名虽叫 `creator`，实际按 owner 语义匹配，**不是“最初创建人”**（创建后转交出去的不算、转交给他的算）。如果用户只给姓名，不要猜 ID，先查这个人的 `open_id`。
 - `doc_types`：只在用户**明确指定资源类型**时使用，适合先把资源类型缩小。显式类型词可按以下方式映射：`表格 / 电子表格 / spreadsheet -> ["SHEET"]`、`多维表格 / base / bitable -> ["BITABLE"]`、`知识库 / wiki -> ["WIKI"]`、`文件夹 -> ["FOLDER"]`、`普通文档` 或明确要求“只看文档类型、不要表格 / Wiki” -> `["DOC","DOCX"]`。不要因为用户口头说“文档”就默认补 `DOC` / `DOCX`，因为“文档”在很多场景里只是对云空间对象的泛称。
 - `chat_ids`：适合“搜某个群里分享过的文档”“看某个群会话里的方案”。如果用户只给群名，先切到 `lark-im` 用群搜索能力拿到 `chat_id`，再回到 `docs +search`。
 - `sharer_ids`：适合“找某人分享过的文档”“看某个同事转给我的资料”。如果用户只给姓名，不要猜 ID，先用 `lark-contact` 查分享者 `open_id`。
