@@ -47,11 +47,12 @@ type Shortcut struct {
 	ConditionalBotScopes  []string // optional: bot-identity conditional scopes
 
 	// Declarative fields (new framework).
-	AuthTypes []string // supported identities: "user", "bot" (default: ["user"])
-	Flags     []Flag   // flag definitions; --dry-run is auto-injected
-	HasFormat bool     // auto-inject --format flag (json|pretty|table|ndjson|csv)
-	Tips      []string // optional tips shown in --help output
-	Hidden    bool     // hide from --help / tab completion (still executable); use when deprecating a command in favor of a replacement
+	AuthTypes    []string // supported identities: "user", "bot" (default: ["user"])
+	Flags        []Flag   // flag definitions; --dry-run is auto-injected
+	HasFormat    bool     // auto-inject --format flag (json|pretty|table|ndjson|csv)
+	FormatValues []string // optional override for auto-injected --format values; json remains the default
+	Tips         []string // optional tips shown in --help output
+	Hidden       bool     // hide from --help / tab completion (still executable); use when deprecating a command in favor of a replacement
 
 	// Business logic hooks.
 	DryRun   func(ctx context.Context, runtime *RuntimeContext) *DryRunAPI // optional: framework prints & returns when --dry-run is set

@@ -65,6 +65,51 @@ func TestShortcutMount_FlagCompletionsRegistered(t *testing.T) {
 	}
 }
 
+func TestShortcutMount_CustomFormatFlagCompletionsRegistered(t *testing.T) {
+	t.Cleanup(func() { cmdutil.SetFlagCompletionsEnabled(false) })
+	cmdutil.SetFlagCompletionsEnabled(true)
+
+	f, _, _, _ := cmdutil.TestFactory(t, nil)
+	parent := &cobra.Command{Use: "root"}
+	shortcut := Shortcut{
+		Service:      "markdown",
+		Command:      "+diff",
+		Description:  "diff markdown",
+		HasFormat:    true,
+		FormatValues: []string{"json", "pretty"},
+		Execute:      func(context.Context, *RuntimeContext) error { return nil },
+	}
+	shortcut.Mount(parent, f)
+
+	cmd, _, err := parent.Find([]string{"+diff"})
+	if err != nil {
+		t.Fatalf("Find() error = %v", err)
+	}
+
+	flag := cmd.Flag("format")
+	if flag == nil {
+		t.Fatal("expected --format flag")
+	}
+	if got, want := flag.Usage, "output format: json (default) | pretty"; got != want {
+		t.Fatalf("format usage = %q, want %q", got, want)
+	}
+
+	fn, ok := cmd.GetFlagCompletionFunc("format")
+	if !ok {
+		t.Fatal("expected completion func for --format")
+	}
+	got, _ := fn(cmd, nil, "")
+	want := []string{"json", "pretty"}
+	if len(got) != len(want) {
+		t.Fatalf("format completion = %v, want %v", got, want)
+	}
+	for i, v := range want {
+		if got[i] != v {
+			t.Fatalf("format completion[%d] = %q, want %q", i, got[i], v)
+		}
+	}
+}
+
 // TestShortcutMount_FlagCompletionsDisabled verifies the switch actually
 // prevents the two registrations from landing in cobra's global map.
 func TestShortcutMount_FlagCompletionsDisabled(t *testing.T) {

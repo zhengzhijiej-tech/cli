@@ -30,7 +30,6 @@ type markdownDiffSpec struct {
 	ToVersion    string
 	FilePath     string
 	ContextLines int
-	Format       string
 }
 
 type markdownDiffHunk struct {
@@ -83,9 +82,6 @@ func validateMarkdownDiffSpec(runtime *common.RuntimeContext, spec markdownDiffS
 	}
 	if spec.ContextLines < 0 {
 		return output.ErrValidation("--context-lines must be >= 0")
-	}
-	if spec.Format != "" && spec.Format != "json" && spec.Format != "pretty" {
-		return output.ErrValidation("markdown +diff only supports --format json or pretty")
 	}
 	if spec.FilePath == "" {
 		if spec.FromVersion == "" && spec.ToVersion == "" {
@@ -406,13 +402,14 @@ func prettyPrintMarkdownDiff(w io.Writer, data map[string]interface{}) {
 }
 
 var MarkdownDiff = common.Shortcut{
-	Service:     "markdown",
-	Command:     "+diff",
-	Description: "Compare remote Markdown versions or compare remote Markdown against a local file",
-	Risk:        "read",
-	Scopes:      []string{"drive:file:download"},
-	AuthTypes:   []string{"user", "bot"},
-	HasFormat:   true,
+	Service:      "markdown",
+	Command:      "+diff",
+	Description:  "Compare remote Markdown versions or compare remote Markdown against a local file",
+	Risk:         "read",
+	Scopes:       []string{"drive:file:download"},
+	AuthTypes:    []string{"user", "bot"},
+	HasFormat:    true,
+	FormatValues: []string{"json", "pretty"},
 	Flags: []common.Flag{
 		{Name: "file-token", Desc: "target Markdown file token", Required: true},
 		{Name: "from-version", Desc: "base remote version; when --to-version is omitted, compare this version to the latest remote version"},
@@ -427,7 +424,6 @@ var MarkdownDiff = common.Shortcut{
 			ToVersion:    strings.TrimSpace(runtime.Str("to-version")),
 			FilePath:     strings.TrimSpace(runtime.Str("file")),
 			ContextLines: runtime.Int("context-lines"),
-			Format:       runtime.Format,
 		})
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {

@@ -4,6 +4,7 @@
 package markdown
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"github.com/larksuite/cli/internal/cmdutil"
 	"github.com/larksuite/cli/internal/httpmock"
 	"github.com/larksuite/cli/internal/output"
+	"github.com/spf13/cobra"
 )
 
 func TestMarkdownDiffRejectsUnsupportedFormat(t *testing.T) {
@@ -26,8 +28,34 @@ func TestMarkdownDiffRejectsUnsupportedFormat(t *testing.T) {
 		"--from-version", "7633658129540910621",
 		"--format", "table",
 	}, f, stdout)
-	if err == nil || !strings.Contains(err.Error(), "only supports --format json or pretty") {
+	if err == nil || !strings.Contains(err.Error(), "allowed: json, pretty") {
 		t.Fatalf("expected format validation error, got %v", err)
+	}
+}
+
+func TestMarkdownDiffHelpShowsOnlySupportedFormats(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
+	f, _, _, _ := cmdutil.TestFactory(t, markdownTestConfig())
+
+	parent := &cobra.Command{Use: "markdown"}
+	var output bytes.Buffer
+	parent.SetOut(&output)
+	parent.SetErr(&output)
+	MarkdownDiff.Mount(parent, f)
+	parent.SetArgs([]string{"+diff", "--help"})
+	parent.SilenceErrors = true
+	parent.SilenceUsage = true
+
+	if err := parent.Execute(); err != nil {
+		t.Fatalf("unexpected help error: %v", err)
+	}
+
+	got := output.String()
+	if !strings.Contains(got, "output format: json (default) | pretty") {
+		t.Fatalf("help missing restricted format text:\n%s", got)
+	}
+	if strings.Contains(got, "table | ndjson | csv") || strings.Contains(got, "| table |") {
+		t.Fatalf("help still exposes unsupported formats:\n%s", got)
 	}
 }
 

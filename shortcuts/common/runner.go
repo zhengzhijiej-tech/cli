@@ -764,7 +764,7 @@ func runShortcut(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut, botOnly bo
 		return err
 	}
 
-	if err := validateEnumFlags(rctx, s.Flags); err != nil {
+	if err := validateEnumFlags(rctx, shortcutValidationFlags(s)); err != nil {
 		return err
 	}
 	if err := resolveInputFlags(rctx, s.Flags); err != nil {
@@ -929,6 +929,51 @@ func validateEnumFlags(rctx *RuntimeContext, flags []Flag) error {
 	return nil
 }
 
+var defaultShortcutFormatValues = []string{"json", "pretty", "table", "ndjson", "csv"}
+
+func shortcutFormatValues(s *Shortcut) []string {
+	if len(s.FormatValues) == 0 {
+		return append([]string(nil), defaultShortcutFormatValues...)
+	}
+
+	values := []string{"json"}
+	seen := map[string]struct{}{"json": {}}
+	for _, value := range s.FormatValues {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		values = append(values, value)
+	}
+	return values
+}
+
+func shortcutFormatUsage(s *Shortcut) string {
+	values := shortcutFormatValues(s)
+	parts := make([]string, 0, len(values))
+	for i, value := range values {
+		if i == 0 {
+			parts = append(parts, value+" (default)")
+			continue
+		}
+		parts = append(parts, value)
+	}
+	return "output format: " + strings.Join(parts, " | ")
+}
+
+func shortcutValidationFlags(s *Shortcut) []Flag {
+	if !s.HasFormat {
+		return s.Flags
+	}
+	flags := append([]Flag(nil), s.Flags...)
+	flags = append(flags, Flag{Name: "format", Enum: shortcutFormatValues(s)})
+	return flags
+}
+
 func handleShortcutDryRun(f *cmdutil.Factory, rctx *RuntimeContext, s *Shortcut) error {
 	if s.DryRun == nil {
 		return FlagErrorf("--dry-run is not supported for %s %s", s.Service, s.Command)
@@ -1007,7 +1052,7 @@ func registerShortcutFlagsWithContext(ctx context.Context, cmd *cobra.Command, f
 
 	cmd.Flags().Bool("dry-run", false, "print request without executing")
 	if s.HasFormat {
-		cmd.Flags().String("format", "json", "output format: json (default) | pretty | table | ndjson | csv")
+		cmd.Flags().String("format", "json", shortcutFormatUsage(s))
 	}
 	if s.Risk == "high-risk-write" {
 		cmd.Flags().Bool("yes", false, "confirm high-risk operation")
@@ -1015,8 +1060,9 @@ func registerShortcutFlagsWithContext(ctx context.Context, cmd *cobra.Command, f
 	cmd.Flags().StringP("jq", "q", "", "jq expression to filter JSON output")
 	cmdutil.AddShortcutIdentityFlag(ctx, cmd, f, s.AuthTypes)
 	if s.HasFormat {
+		values := shortcutFormatValues(s)
 		cmdutil.RegisterFlagCompletion(cmd, "format", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-			return []string{"json", "pretty", "table", "ndjson", "csv"}, cobra.ShellCompDirectiveNoFileComp
+			return values, cobra.ShellCompDirectiveNoFileComp
 		})
 	}
 }
